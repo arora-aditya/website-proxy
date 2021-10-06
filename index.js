@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
     var options = {
       'method': 'GET',
       'hostname': 'lichess.org',
-      'path': '/api/games/user/SwanJaguar?max=10&pgnInJson=false&moves=false',
+      'path': '/api/games/user/SwanJaguar?max=10&pgnInJson=false&moves=false&opening=true',
       'headers': {
         'Accept': 'application/x-ndjson',
         'Authorization': `Bearer ${token}`
