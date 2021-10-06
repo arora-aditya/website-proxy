@@ -1,0 +1,29 @@
+{
+  "name": "simple-heroku-proxy",
+  "version": "2.0.0",
+  "description": "A simple proxy app for deploying to Heroku",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "proxy",
+    "heroku"
+  ],
+  "author": "homerjam",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "follow-redirects": "^1.14.4",
+    "helmet": "^4.4.1",
+    "lodash": "^4.17.20",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0",
+    "eslint": "^7.18.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "prettier": "^2.2.1"
+  }
+}

@@ -1,0 +1,1 @@
+# Simple Lichess proxy for my website
