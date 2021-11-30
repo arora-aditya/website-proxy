@@ -4,20 +4,20 @@ const express = require('express');
 const helmet = require('helmet');
 const NodeCache = require('node-cache');
 const https = require('follow-redirects').https;
-const fs = require('fs');
+const spotify = require('spotify-web-api-node');
+const axios = require('axios');
 
-const qs = require('querystring');
 
 const PORT = process.env.PORT || 8081;
 const HOST = process.env.HOST || 'localhost';
 
+const API_KEY = process.env.CLIENT_ID || '9a6e05eaccedd9aa6080a02b75caefa9';
 const CONFIG = JSON.parse(process.env.CONFIG || '{}');
 
 const app = express();
 app.use(helmet());
 
 const token = process.env.LICHESS_TOKEN || '';
-console.log(token);
 // every key lives for  1hour = 60*60s, and refreshed every 10 minutes
 const myCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 } );
 
@@ -61,6 +61,13 @@ app.get('/', (req, res) => {
   } else {
     res.send(result);
   }
+})
+
+
+app.get('/spotify', async (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  const body = await axios.get('http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=arora_aditya&api_key=' + API_KEY + '&format=json');
+  res.send(body.data.recenttracks.track[0]);
 })
 
 const server = http.createServer(app);
