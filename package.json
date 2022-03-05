@@ -13,13 +13,14 @@
   "author": "homerjam",
   "license": "MIT",
   "dependencies": {
+    "@notionhq/client": "^1.0.1",
     "axios": "^0.24.0",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "follow-redirects": "^1.14.4",
     "helmet": "^4.4.1",
     "lodash": "^4.17.20",
-    "node-cache": "^5.1.2",
-    "spotify-web-api-node": "^5.0.2"
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",

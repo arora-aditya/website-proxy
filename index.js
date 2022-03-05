@@ -4,8 +4,9 @@ const express = require('express');
 const helmet = require('helmet');
 const NodeCache = require('node-cache');
 const https = require('follow-redirects').https;
-const spotify = require('spotify-web-api-node');
 const axios = require('axios');
+const { Client } = require('@notionhq/client');
+
 
 
 const PORT = process.env.PORT || 8081;
@@ -15,11 +16,72 @@ const API_KEY = process.env.CLIENT_ID || '9a6e05eaccedd9aa6080a02b75caefa9';
 const CONFIG = JSON.parse(process.env.CONFIG || '{}');
 
 const app = express();
-app.use(helmet());
 
 const token = process.env.LICHESS_TOKEN || '';
+const notion_token = process.env.NOTION_ACCESS_TOKEN
 // every key lives for  1hour = 60*60s, and refreshed every 10 minutes
 const myCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 } );
+const notion = new Client({ auth: notion_token });
+
+app.get('/spotify', async (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  const body = await axios.get('http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=arora_aditya&api_key=' + API_KEY + '&format=json');
+  res.send(body.data.recenttracks.track[0]);
+})
+
+const getPage = async (pageId) => {
+  const response = await notion.pages.retrieve({ page_id: pageId });
+  return response;
+};
+
+const getBlocks = async (blockId) => {
+  const blocks = [];
+  let cursor;
+  while (true) {
+    const { results, next_cursor } = await notion.blocks.children.list({
+      start_cursor: cursor,
+      block_id: blockId,
+    });
+    blocks.push(...results);
+    if (!next_cursor) {
+      break;
+    }
+    cursor = next_cursor;
+  }
+  return blocks;
+};
+
+app.get('/nownownow', async (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  const id = 'ed2ef9437f95407aa970aa20e66b08af'
+  const page = await getPage(id);
+  const blocks = await getBlocks(id);
+
+  // Retrieve block children for nested blocks (one level deep), for example toggle blocks
+  // https://developers.notion.com/docs/working-with-page-content#reading-nested-blocks
+  const childBlocks = await Promise.all(
+    blocks
+      .filter((block) => block.has_children)
+      .map(async (block) => {
+        return {
+          id: block.id,
+          children: await getBlocks(block.id),
+        };
+      })
+  );
+  const blocksWithChildren = blocks.map((block) => {
+    // Add child blocks if the block should contain children but none exists
+    if (block.has_children && !block[block.type].children) {
+      block[block.type]["children"] = childBlocks.find(
+        (x) => x.id === block.id
+      )?.children;
+    }
+    return block;
+  });
+
+  res.send({page, blocksWithChildren});
+  next();
+})
 
 app.get('/', (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -61,13 +123,6 @@ app.get('/', (req, res) => {
   } else {
     res.send(result);
   }
-})
-
-
-app.get('/spotify', async (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  const body = await axios.get('http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=arora_aditya&api_key=' + API_KEY + '&format=json');
-  res.send(body.data.recenttracks.track[0]);
 })
 
 const server = http.createServer(app);
