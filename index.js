@@ -18,7 +18,7 @@ const CONFIG = JSON.parse(process.env.CONFIG || '{}');
 const app = express();
 
 const token = process.env.LICHESS_TOKEN || '';
-const notion_token = process.env.NOTION_ACCESS_TOKEN
+const notion_token = process.env.NOTION_ACCESS_TOKEN || ''
 // every key lives for  1hour = 60*60s, and refreshed every 10 minutes
 const myCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 } );
 const notion = new Client({ auth: notion_token });
@@ -53,33 +53,40 @@ const getBlocks = async (blockId) => {
 
 app.get('/nownownow', async (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  const id = 'ed2ef9437f95407aa970aa20e66b08af'
-  const page = await getPage(id);
-  const blocks = await getBlocks(id);
+  const result = myCache.get("nownownow");
+  if(result === undefined){
+    const id = 'ed2ef9437f95407aa970aa20e66b08af'
+    const page = await getPage(id);
+    const blocks = await getBlocks(id);
 
-  // Retrieve block children for nested blocks (one level deep), for example toggle blocks
-  // https://developers.notion.com/docs/working-with-page-content#reading-nested-blocks
-  const childBlocks = await Promise.all(
-    blocks
-      .filter((block) => block.has_children)
-      .map(async (block) => {
-        return {
-          id: block.id,
-          children: await getBlocks(block.id),
-        };
-      })
-  );
-  const blocksWithChildren = blocks.map((block) => {
-    // Add child blocks if the block should contain children but none exists
-    if (block.has_children && !block[block.type].children) {
-      block[block.type]["children"] = childBlocks.find(
-        (x) => x.id === block.id
-      )?.children;
+    // Retrieve block children for nested blocks (one level deep), for example toggle blocks
+    // https://developers.notion.com/docs/working-with-page-content#reading-nested-blocks
+    const childBlocks = await Promise.all(
+      blocks
+        .filter((block) => block.has_children)
+        .map(async (block) => {
+          return {
+            id: block.id,
+            children: await getBlocks(block.id),
+          };
+        })
+    );
+    const blocksWithChildren = blocks.map((block) => {
+      // Add child blocks if the block should contain children but none exists
+      if (block.has_children && !block[block.type].children) {
+        block[block.type]["children"] = childBlocks.find(
+          (x) => x.id === block.id
+        )?.children;
+      }
+      return block;
+    });
+    const result = {
+      page: page,
+      blocksWithChildren: blocksWithChildren,
     }
-    return block;
-  });
-
-  res.send({page, blocksWithChildren});
+    myCache.set("nownownow", result);
+  } 
+  res.send(result);
   next();
 })
 
