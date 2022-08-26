@@ -6,6 +6,9 @@ const NodeCache = require('node-cache');
 const https = require('follow-redirects').https;
 const axios = require('axios');
 const { Client } = require('@notionhq/client');
+const cors = require('cors')
+
+
 
 
 
@@ -16,6 +19,7 @@ const API_KEY = process.env.CLIENT_ID || '9a6e05eaccedd9aa6080a02b75caefa9';
 const CONFIG = JSON.parse(process.env.CONFIG || '{}');
 
 const app = express();
+app.use(cors());
 
 const token = process.env.LICHESS_TOKEN || '';
 const notion_token = process.env.NOTION_ACCESS_TOKEN || ''
