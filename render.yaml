@@ -9,6 +9,6 @@ services:
     plan: free # optional; defaults to starter
     numInstances: 1
     envVars:
-      - key: CONFIG # Imported from Heroku app
-        value: { &quot;targets&quot;: [{ &quot;target&quot;: &quot;https://&quot;, &quot;route&quot;: &quot;/&quot; }] }
+      - key: CONFIG
+        value: '{ "targets": [{ "target": "https://", "route": "/" }] }'
 
