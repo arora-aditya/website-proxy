@@ -57,8 +57,7 @@ const getBlocks = async (blockId) => {
 
 app.get('/nownownow', async (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  const result = myCache.get("nownownow");
-  if(result === undefined){
+  if(myCache.get("nownownow") === undefined){
     const id = 'ed2ef9437f95407aa970aa20e66b08af'
     const page = await getPage(id);
     const blocks = await getBlocks(id);
@@ -90,7 +89,17 @@ app.get('/nownownow', async (req, res, next) => {
     }
     myCache.set("nownownow", result);
   } 
-  res.send(result);
+  res.send(myCache.get("nownownow"));
+  next();
+})
+
+app.get('/books', async (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  if(myCache.get("books") === undefined){
+    const result = await axios.get('https://blogs.arora-aditya.com/book-rss.xml');
+    myCache.set("books", result.data);
+  } 
+  res.send(myCache.get("books"));
   next();
 })
 
